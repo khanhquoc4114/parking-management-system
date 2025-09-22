@@ -1,0 +1,15 @@
+torch>=1.12.0
+opencv-python
+numpy
+pandas
+matplotlib
+PyYAML
+scipy
+requests
+seaborn
+gitpython>=3.1.30
+ultralytics
+pyinstaller
+Pillow
+torchvision
+pywin32
