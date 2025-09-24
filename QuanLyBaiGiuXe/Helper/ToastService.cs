@@ -1,6 +1,4 @@
-﻿using System.Windows.Forms;
-
-namespace QuanLyBaiGiuXe.Helper
+﻿namespace QuanLyBaiGiuXe.Helper
 {
     public static class ToastService
     {

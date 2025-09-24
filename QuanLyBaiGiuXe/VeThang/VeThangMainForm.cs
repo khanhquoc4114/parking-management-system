@@ -1,8 +1,5 @@
 ﻿using QuanLyBaiGiuXe.Models;
-using System;
-using System.Windows.Forms;
-using OfficeOpenXml;
-using System.IO;
+using QuanLyBaiGiuXe.Services;
 
 namespace QuanLyBaiGiuXe
 {
@@ -167,32 +164,10 @@ namespace QuanLyBaiGiuXe
                 {
                     try
                     {
-                        // Thiết lập LicenseContext trước khi tạo ExcelPackage
-                        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                        var excelService = new ExcelExportService();
+                        excelService.ExportDataGridViewToExcel(dtgVeThang, sfd.FileName);
 
-                        using (ExcelPackage package = new ExcelPackage())
-                        {
-                            ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                            // Header
-                            for (int col = 0; col < dtgVeThang.Columns.Count; col++)
-                            {
-                                worksheet.Cells[1, col + 1].Value = dtgVeThang.Columns[col].HeaderText;
-                            }
-
-                            // Dữ liệu
-                            for (int row = 0; row < dtgVeThang.Rows.Count; row++)
-                            {
-                                for (int col = 0; col < dtgVeThang.Columns.Count; col++)
-                                {
-                                    worksheet.Cells[row + 2, col + 1].Value = dtgVeThang.Rows[row].Cells[col].Value?.ToString();
-                                }
-                            }
-
-                            // Lưu file
-                            File.WriteAllBytes(sfd.FileName, package.GetAsByteArray());
-                            MessageBox.Show("Xuất Excel thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        }
+                        MessageBox.Show("Xuất Excel thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {

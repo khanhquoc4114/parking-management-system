@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using Microsoft.Data.SqlClient;
 
 namespace QuanLyBaiGiuXe.DataAccess
@@ -10,7 +9,7 @@ namespace QuanLyBaiGiuXe.DataAccess
 
         public LoginManager(){}
 
-        public string GetTen(string username, string password)
+        public string? GetTen(string username, string password)
         {
             db.OpenConnection();
             using (SqlCommand cmd = new SqlCommand("SELECT HoTen FROM NhanVien WHERE TenDangNhap = @username AND MatKhau = @password", db.GetConnection()))
@@ -139,7 +138,7 @@ namespace QuanLyBaiGiuXe.DataAccess
             }
         }
 
-        public string GetHoTenByMaNhanVien(string maNhanVien)
+        public string? GetHoTenByMaNhanVien(string maNhanVien)
         {
             db.OpenConnection();
             using (SqlCommand cmd = new SqlCommand("SELECT HoTen FROM NhanVien WHERE MaNhanVien = @MaNV", db.GetConnection()))

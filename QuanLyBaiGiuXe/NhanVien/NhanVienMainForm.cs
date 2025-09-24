@@ -1,8 +1,5 @@
 ﻿using QuanLyBaiGiuXe.Helper;
 using QuanLyBaiGiuXe.Models;
-using System;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace QuanLyBaiGiuXe
 {

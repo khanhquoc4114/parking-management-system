@@ -1,9 +1,6 @@
 ﻿using QuanLyBaiGiuXe.Helper;
 using QuanLyBaiGiuXe.Models;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Windows.Forms;
 
 namespace QuanLyBaiGiuXe
 {

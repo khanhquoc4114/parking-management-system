@@ -1,9 +1,7 @@
 ﻿using QuanLyBaiGiuXe.DataAccess;
 using QuanLyBaiGiuXe.Models;
 using QuanLyBaiGiuXe.Properties;
-using System;
 using Microsoft.Data.SqlClient;
-using System.Windows.Forms;
 
 namespace QuanLyBaiGiuXe
 {

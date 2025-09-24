@@ -1,8 +1,5 @@
-﻿using OfficeOpenXml;
-using QuanLyBaiGiuXe.Models;
-using System;
-using System.IO;
-using System.Windows.Forms;
+﻿using QuanLyBaiGiuXe.Models;
+using QuanLyBaiGiuXe.Services;
 
 namespace QuanLyBaiGiuXe
 {
@@ -47,31 +44,18 @@ namespace QuanLyBaiGiuXe
                 DateTime now = DateTime.Now;
                 sfd.FileName = $"ThongKeXuLyVeThang_{now:ddMMyyyy}.xlsx";
 
-                ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
                 if (sfd.ShowDialog() == DialogResult.OK)
                 {
-                    using (ExcelPackage package = new ExcelPackage())
+                    try
                     {
-                        ExcelWorksheet worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                        // Xuất tiêu đề cột
-                        for (int col = 0; col < dtgXuLyVeThang.Columns.Count; col++)
-                        {
-                            worksheet.Cells[1, col + 1].Value = dtgXuLyVeThang.Columns[col].HeaderText;
-                        }
-
-                        // Xuất dữ liệu từ DataGridView
-                        for (int row = 0; row < dtgXuLyVeThang.Rows.Count; row++)
-                        {
-                            for (int col = 0; col < dtgXuLyVeThang.Columns.Count; col++)
-                            {
-                                worksheet.Cells[row + 2, col + 1].Value = dtgXuLyVeThang.Rows[row].Cells[col].Value?.ToString();
-                            }
-                        }
-
-                        File.WriteAllBytes(sfd.FileName, package.GetAsByteArray());
+                        var excelService = new ExcelExportService();
+                        excelService.ExportDataGridViewToExcel(dtgXuLyVeThang, sfd.FileName);
 
                         MessageBox.Show("Xuất Excel thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Lỗi xuất Excel: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }

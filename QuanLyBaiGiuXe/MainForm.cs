@@ -66,6 +66,7 @@ namespace QuanLyBaiGiuXe
             ctsPingModel = new CancellationTokenSource();
             await PingModelUntilReadyAsync(ctsPingModel.Token);
         }
+
         #region Nhận diện
         private void SendImageAndReceiveResult(string filePath)
         {

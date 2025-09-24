@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace QuanLyBaiGiuXe.Models
+﻿namespace QuanLyBaiGiuXe.Models
 {
     public class VeLuotInfo
     {
