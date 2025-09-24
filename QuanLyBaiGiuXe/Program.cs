@@ -3,7 +3,7 @@ using QuanLyBaiGiuXe.Helper;
 using QuanLyBaiGiuXe.Models;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
@@ -48,11 +48,10 @@ namespace QuanLyBaiGiuXe
                 string error = null;
                 string maNV = loginManager.GetMaNhanVien(user, pass, out error);
                 string name = loginManager.GetTen(user, pass);
-                //MessageBox.Show("Nhớ: " + Properties.Settings.Default.RememberMe.ToString() + "\n Mã nhân viên: " + maNV +  error);
                 if (!string.IsNullOrEmpty(maNV))
                 {
                     Session.MaNhanVien = maNV;
-                    Application.Run(new MenuForm()); // mặc định phải là MenuForm()
+                    Application.Run(new MenuForm());
                     return;
                 }
             }

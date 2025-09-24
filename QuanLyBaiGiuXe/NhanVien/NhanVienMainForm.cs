@@ -184,12 +184,12 @@ namespace QuanLyBaiGiuXe
                 if (trangThai == "Sử dụng")
                 {
                     btnKhoiPhuc.Text = "Khoá";
-                    btnKhoiPhuc.BackColor = Color.LightCoral;
+                    btnKhoiPhuc.BackColor = System.Drawing.Color.LightCoral;
                 }
                 else if (trangThai == "Khoá")
                 {
                     btnKhoiPhuc.Text = "Khôi phục";
-                    btnKhoiPhuc.BackColor = Color.LightGreen;
+                    btnKhoiPhuc.BackColor = System.Drawing.Color.LightGreen;
                 }
             }
         }

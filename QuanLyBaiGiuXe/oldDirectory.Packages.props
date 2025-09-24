@@ -1,0 +1,62 @@
+<Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+	</PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="Accord" Version="3.8.0" />
+    <PackageVersion Include="Accord.Imaging" Version="3.8.0" />
+    <PackageVersion Include="Accord.Video" Version="3.8.0" />
+    <PackageVersion Include="Accord.Video.DirectShow" Version="3.8.0" />
+    <PackageVersion Include="AForge" Version="2.2.5" />
+    <PackageVersion Include="AForge.Video" Version="2.2.5" />
+    <PackageVersion Include="AForge.Video.DirectShow" Version="2.2.5" />
+    <PackageVersion Include="aqua-core" Version="5.4.2" />
+    <PackageVersion Include="aqua-core-newtonsoft-json" Version="5.4.2" />
+    <PackageVersion Include="EPPlus" Version="7.0.0" />
+    <PackageVersion Include="EPPlus.Interfaces" Version="8.0.0" />
+    <PackageVersion Include="EPPlus.System.Drawing" Version="7.0.0" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+    <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageVersion Include="Microsoft.Data.SqlClient" Version="6.1.1" />
+    <PackageVersion Include="Microsoft.DotNet.UpgradeAssistant.Extensions.Default.Analyzers" Version="0.4.421302" />
+    <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
+    <PackageVersion Include="Microsoft.UpgradeAssistant.ApiCatalog.Assets" Version="10.0.1" />
+    <PackageVersion Include="NetTopologySuite" Version="2.6.0" />
+    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="OpenCvSharp4" Version="4.11.0.20250507" />
+    <PackageVersion Include="OpenCvSharp4.runtime.win" Version="4.11.0.20250507" />
+    <PackageVersion Include="Remote.Linq" Version="7.2.2" />
+    <PackageVersion Include="Remote.Linq.Newtonsoft.Json" Version="7.2.2" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.11" />
+    <PackageVersion Include="System.Buffers" Version="4.6.0" />
+    <PackageVersion Include="System.ComponentModel.Annotations" Version="5.0.0" />
+    <PackageVersion Include="System.ComponentModel.Composition" Version="9.0.9" />
+    <PackageVersion Include="System.Configuration.ConfigurationManager" Version="9.0.9" />
+    <PackageVersion Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageVersion Include="System.Data.SqlClient" Version="4.9.0" />
+    <PackageVersion Include="System.Data.SQLite" Version="2.0.2" />
+    <PackageVersion Include="System.Diagnostics.DiagnosticSource" Version="6.0.1" />
+    <PackageVersion Include="System.Drawing.Common" Version="8.0.10" />
+    <PackageVersion Include="System.Drawing.Primitives" Version="4.3.0" />
+    <PackageVersion Include="System.IO" Version="4.3.0" />
+    <PackageVersion Include="System.IO.Pipelines" Version="9.0.0" />
+    <PackageVersion Include="System.Management" Version="9.0.9" />
+    <PackageVersion Include="System.Memory" Version="4.6.0" />
+    <PackageVersion Include="System.Numerics.Vectors" Version="4.6.0" />
+    <PackageVersion Include="System.Reflection.Emit" Version="4.7.0" />
+    <PackageVersion Include="System.Runtime" Version="4.3.1" />
+    <PackageVersion Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.0" />
+    <PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0" />
+    <PackageVersion Include="System.Security.AccessControl" Version="6.0.1" />
+    <PackageVersion Include="System.Security.Cryptography.Encoding" Version="4.3.0" />
+    <PackageVersion Include="System.Security.Cryptography.Primitives" Version="4.3.0" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="8.0.2" />
+    <PackageVersion Include="System.Security.Permissions" Version="6.0.1" />
+    <PackageVersion Include="System.Security.Principal.Windows" Version="5.0.0" />
+    <PackageVersion Include="System.Text.Encoding.CodePages" Version="9.0.9" />
+    <PackageVersion Include="System.Text.Encodings.Web" Version="9.0.0" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.0" />
+    <PackageVersion Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+    <PackageVersion Include="System.ValueTuple" Version="4.5.0" />
+  </ItemGroup>
+</Project>

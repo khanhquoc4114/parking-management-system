@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace QuanLyBaiGiuXe.Helper
 {
-    class TinhTienManager
+    public class TinhTienManager
     {
         Manager manager = new Manager();
 

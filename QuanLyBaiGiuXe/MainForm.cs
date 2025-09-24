@@ -1,19 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
+using QuanLyBaiGiuXe.Helper;
 using QuanLyBaiGiuXe.Models;
-using System;
-using System.Drawing;
+using QuanLyBaiGiuXe.Properties;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Net.Sockets;
 using System.Text;
-using System.Windows.Forms;
-using QuanLyBaiGiuXe.Helper;
-using AForge.Video.DirectShow;
-using AForge.Video;
-using System.Drawing.Imaging;
-using System.Collections.Generic;
-using QuanLyBaiGiuXe.Properties;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace QuanLyBaiGiuXe
 {
@@ -21,9 +15,6 @@ namespace QuanLyBaiGiuXe
     {
         Manager manager = new Manager();
         VeManager veManager = new VeManager();
-        private FilterInfoCollection videoDevices;
-        private VideoCaptureDevice videoSource1;
-        private VideoCaptureDevice videoSource2;
         string MaSoXe = string.Empty;
         private int selectedCameraIndex = 0;
 
@@ -76,54 +67,6 @@ namespace QuanLyBaiGiuXe
             await PingModelUntilReadyAsync(ctsPingModel.Token);
         }
         #region Nhận diện
-        //private void SendImageAndReceiveResult(string filePath)
-        //{
-        //    try
-        //    {
-        //        byte[] imageData = File.ReadAllBytes(filePath);
-        //        string serverIP = "127.0.0.1";
-
-        //        using (TcpClient client = new TcpClient(serverIP, 54321))
-        //        using (NetworkStream stream = client.GetStream())
-        //        {
-        //            client.ReceiveTimeout = 10000;
-        //            client.SendTimeout = 10000;
-        //            byte[] fileSizeBytes = BitConverter.GetBytes(imageData.Length);
-        //            if (BitConverter.IsLittleEndian)
-        //                Array.Reverse(fileSizeBytes);
-
-        //            stream.Write(fileSizeBytes, 0, 4);
-        //            stream.Write(imageData, 0, imageData.Length);
-
-        //            byte[] sizeBuffer = new byte[4];
-        //            stream.Read(sizeBuffer, 0, 4);
-        //            if (BitConverter.IsLittleEndian)
-        //                Array.Reverse(sizeBuffer);
-        //            int responseSize = BitConverter.ToInt32(sizeBuffer, 0);
-
-        //            byte[] responseData = new byte[responseSize];
-        //            int totalRead = 0;
-        //            while (totalRead < responseSize)
-        //            {
-        //                int bytesRead = stream.Read(responseData, totalRead, responseSize - totalRead);
-        //                if (bytesRead == 0) break;
-        //                totalRead += bytesRead;
-        //            }
-
-        //            string jsonResult = Encoding.UTF8.GetString(responseData);
-        //            Console.WriteLine("Response from server: " + jsonResult);
-        //            var json = JObject.Parse(jsonResult);
-        //            string plateText = json["plate_text"]?.ToString() ?? "unknown";
-        //            tbBienSoVao.Text = plateText;
-        //            MaSoXe = plateText;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MessageBox.Show("Lỗi nhận kết quả từ model: " + ex.Message);
-        //    }
-        //}
-
         private void SendImageAndReceiveResult(string filePath)
         {
             try
@@ -219,92 +162,185 @@ namespace QuanLyBaiGiuXe
             }
         }
 
+
+        private VideoCapture? capture1;
+        private VideoCapture? capture2;
+        private CancellationTokenSource? cts;
         private void LoadCamera()
         {
-            videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+            cts = new CancellationTokenSource();
 
-            if (videoDevices.Count == 0)
+            // Camera 0 -> pb1
+            capture1 = new VideoCapture(0);
+            if (!capture1.IsOpened())
             {
-                MessageBox.Show("Không tìm thấy camera!");
+                MessageBox.Show("Không tìm thấy camera 0!");
                 return;
             }
+            Task.Run(() => CaptureLoop(capture1, pb1, cts.Token));
 
-            // Camera 1 -> pb1
-            videoSource1 = new VideoCaptureDevice(videoDevices[0].MonikerString);
-            videoSource1.NewFrame += VideoSource1_NewFrame;
-            videoSource1.Start();
-
-            // Camera 2 -> pbCamera1 (nếu có)
-            if (videoDevices.Count > 1)
+            // Camera 1 -> pbCamera1
+            capture2 = new VideoCapture(1);
+            if (capture2.IsOpened())
             {
-                videoSource2 = new VideoCaptureDevice(videoDevices[1].MonikerString);
-                videoSource2.NewFrame += VideoSource2_NewFrame;
-                videoSource2.Start();
+                Task.Run(() => CaptureLoop(capture2, pbCamera1, cts.Token));
             }
         }
 
-        private void VideoSource1_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        private void CaptureLoop(VideoCapture capture, PictureBox pb, CancellationToken token)
         {
-            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
-            if (pb1.InvokeRequired)
+            using var mat = new Mat();
+            while (!token.IsCancellationRequested)
             {
-                pb1.BeginInvoke(new Action(() =>
+                if (!capture.Read(mat) || mat.Empty())
+                    continue;
+
+                try
                 {
-                    pb1.Image?.Dispose();
-                    pb1.Image = bitmap;
-                }));
-            }
-            else
-            {
-                pb1.Image?.Dispose();
-                pb1.Image = bitmap;
+                    var bitmap = BitmapConverter.ToBitmap(mat);
+                    if (bitmap == null) continue;
+
+                    // Tạo copy an toàn qua MemoryStream
+                    using (var ms = new MemoryStream())
+                    {
+                        bitmap.Save(ms, ImageFormat.Bmp);
+                        ms.Position = 0;
+                        var safeBitmap = new Bitmap(ms);
+
+                        if (pb.InvokeRequired)
+                        {
+                            pb.BeginInvoke(new Action(() => UpdatePictureBox(pb, safeBitmap)));
+                        }
+                        else
+                        {
+                            UpdatePictureBox(pb, safeBitmap);
+                        }
+                    }
+                    bitmap.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Capture error: {ex.Message}");
+                }
             }
         }
 
-        private void VideoSource2_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        private void UpdatePictureBox(PictureBox pb, Bitmap newImage)
         {
-            Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
-            if (pbCamera1.InvokeRequired)
+            try
             {
-                pbCamera1.BeginInvoke(new Action(() =>
-                {
-                    pbCamera1.Image?.Dispose();
-                    pbCamera1.Image = bitmap;
-                }));
+                pb.Image?.Dispose();
+                pb.Image = newImage;
             }
-            else
+            catch (Exception ex)
             {
-                pbCamera1.Image?.Dispose();
-                pbCamera1.Image = bitmap;
+                newImage?.Dispose();
+                Console.WriteLine($"PictureBox update error: {ex.Message}");
             }
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (videoSource1 != null)
-            {
-                videoSource1.SignalToStop();
-                videoSource1.WaitForStop();
-                videoSource1.NewFrame -= VideoSource1_NewFrame;
-                videoSource1 = null;
-            }
+            cts?.Cancel();
 
-            if (videoSource2 != null)
-            {
-                videoSource2.SignalToStop();
-                videoSource2.WaitForStop();
-                videoSource2.NewFrame -= VideoSource2_NewFrame;
-                videoSource2 = null;
-            }
+            capture1?.Release();
+            capture2?.Release();
+            capture1?.Dispose();
+            capture2?.Dispose();
 
             pb1.Image?.Dispose();
             pb1.Image = null;
 
             pbCamera1.Image?.Dispose();
             pbCamera1.Image = null;
-
-            ctsPingModel?.Cancel();
         }
+
+        //private void LoadCamera()
+        //{
+        //    videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+
+        //    if (videoDevices.Count == 0)
+        //    {
+        //        MessageBox.Show("Không tìm thấy camera!");
+        //        return;
+        //    }
+
+        //    // Camera 1 -> pb1
+        //    videoSource1 = new VideoCaptureDevice(videoDevices[0].MonikerString);
+        //    videoSource1.NewFrame += VideoSource1_NewFrame;
+        //    videoSource1.Start();
+
+        //    // Camera 2 -> pbCamera1 (nếu có)
+        //    if (videoDevices.Count > 1)
+        //    {
+        //        videoSource2 = new VideoCaptureDevice(videoDevices[1].MonikerString);
+        //        videoSource2.NewFrame += VideoSource2_NewFrame;
+        //        videoSource2.Start();
+        //    }
+        //}
+
+        //private void VideoSource1_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        //{
+        //    Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+        //    if (pb1.InvokeRequired)
+        //    {
+        //        pb1.BeginInvoke(new Action(() =>
+        //        {
+        //            pb1.Image?.Dispose();
+        //            pb1.Image = bitmap;
+        //        }));
+        //    }
+        //    else
+        //    {
+        //        pb1.Image?.Dispose();
+        //        pb1.Image = bitmap;
+        //    }
+        //}
+
+        //private void VideoSource2_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        //{
+        //    Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+        //    if (pbCamera1.InvokeRequired)
+        //    {
+        //        pbCamera1.BeginInvoke(new Action(() =>
+        //        {
+        //            pbCamera1.Image?.Dispose();
+        //            pbCamera1.Image = bitmap;
+        //        }));
+        //    }
+        //    else
+        //    {
+        //        pbCamera1.Image?.Dispose();
+        //        pbCamera1.Image = bitmap;
+        //    }
+        //}
+
+        //private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        //{
+        //    if (videoSource1 != null)
+        //    {
+        //        videoSource1.SignalToStop();
+        //        videoSource1.WaitForStop();
+        //        videoSource1.NewFrame -= VideoSource1_NewFrame;
+        //        videoSource1 = null;
+        //    }
+
+        //    if (videoSource2 != null)
+        //    {
+        //        videoSource2.SignalToStop();
+        //        videoSource2.WaitForStop();
+        //        videoSource2.NewFrame -= VideoSource2_NewFrame;
+        //        videoSource2 = null;
+        //    }
+
+        //    pb1.Image?.Dispose();
+        //    pb1.Image = null;
+
+        //    pbCamera1.Image?.Dispose();
+        //    pbCamera1.Image = null;
+
+        //    ctsPingModel?.Cancel();
+        //}
 
         #endregion
 

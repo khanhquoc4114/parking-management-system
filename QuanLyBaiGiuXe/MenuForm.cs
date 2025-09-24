@@ -1,6 +1,4 @@
 ﻿using QuanLyBaiGiuXe.DataAccess;
-using System;
-using System.Windows.Forms;
 using QuanLyBaiGiuXe.Helper;
 
 namespace QuanLyBaiGiuXe

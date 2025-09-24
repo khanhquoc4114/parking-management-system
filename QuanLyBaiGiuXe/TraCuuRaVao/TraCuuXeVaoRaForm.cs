@@ -1,15 +1,7 @@
-﻿using NetTopologySuite.GeometriesGraph;
-using OfficeOpenXml;
+﻿using OfficeOpenXml;
 using QuanLyBaiGiuXe.Helper;
 using QuanLyBaiGiuXe.Models;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Security.Policy;
-using System.Windows.Forms;
 
 namespace QuanLyBaiGiuXe
 {
@@ -144,7 +136,7 @@ namespace QuanLyBaiGiuXe
             {
                 var maVeLuot = dtgThongKe.CurrentRow.Cells["MaVeLuot"].Value?.ToString();
                 var form = new XuLyMatThe(maVeLuot);
-                form.ShowDialog();
+                form.Show();
                 if (form.isThanhCong)
                 {
                     LoadData();
@@ -189,7 +181,7 @@ namespace QuanLyBaiGiuXe
 
                     using (var ms = new MemoryStream(File.ReadAllBytes(imagePath)))
                     {
-                        picBox.Image = Image.FromStream(ms);
+                        picBox.Image = System.Drawing.Image.FromStream(ms);
                     }
                 }
                 else

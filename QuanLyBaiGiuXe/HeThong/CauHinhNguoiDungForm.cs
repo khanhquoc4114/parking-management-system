@@ -2,7 +2,7 @@
 using QuanLyBaiGiuXe.Models;
 using QuanLyBaiGiuXe.Properties;
 using System;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Windows.Forms;
 
 namespace QuanLyBaiGiuXe

@@ -1,25 +1,23 @@
-﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
+﻿using System.Drawing;
 
 namespace QuanLyBaiGiuXe
 {
     public partial class ToastForm : Form
     {
-        private Timer timer;
+        private System.Windows.Forms.Timer timer;
 
         public ToastForm(string message, Form ownerForm, int duration = 1000)
         {
             InitializeComponent();
             this.FormBorderStyle = FormBorderStyle.None;
             this.StartPosition = FormStartPosition.Manual;
-            this.BackColor = Color.LightYellow;
+            this.BackColor = System.Drawing.Color.LightYellow;
             this.ShowInTaskbar = false;
-            this.Size = new Size(280, 80);
+            this.Size = new System.Drawing.Size(280, 80);
 
             int x = ownerForm.Left + (ownerForm.Width - this.Width) / 2;
             int y = ownerForm.Top + (ownerForm.Height - this.Height) / 2;
-            this.Location = new Point(x, y);
+            this.Location = new System.Drawing.Point(x, y);
 
             Label lbl = new Label()
             {
@@ -32,7 +30,7 @@ namespace QuanLyBaiGiuXe
             };
             this.Controls.Add(lbl);
 
-            timer = new Timer();
+            timer = new System.Windows.Forms.Timer();
             timer.Interval = duration;
             timer.Tick += (s, e) =>
             {

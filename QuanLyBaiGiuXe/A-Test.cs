@@ -14,7 +14,6 @@ namespace QuanLyBaiGiuXe
         Manager manager = new Manager();
         VeManager veManager = new VeManager();
         TinhTienManager tinhTienManager = new TinhTienManager();
-        SerialPort serialPort = new SerialPort("COM3", 9600, Parity.None, 8, StopBits.One);
 
         public A_Test()
         {

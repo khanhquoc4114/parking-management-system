@@ -1,30 +1,29 @@
 ﻿using QuanLyBaiGiuXe.DataAccess;
 using QuanLyBaiGiuXe.Helper;
 using QuanLyBaiGiuXe.Models;
-using System;
 using System.Data;
-using System.Data.SqlClient;
-using System.Drawing;
 using System.IO;
-using System.Windows.Forms;
-using AForge.Video;
-using AForge.Video.DirectShow;
 using System.Drawing.Imaging;
 using QuanLyBaiGiuXe.Properties;
+using Microsoft.Data.SqlClient;
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
 
 namespace QuanLyBaiGiuXe
 {
-    public partial class XuLyMatThe: Form
+    public partial class XuLyMatThe : Form
     {
         Manager manager = new Manager();
         string maveluot = string.Empty;
         Connector db = new Connector();
         TinhTienManager TinhTienManager = new TinhTienManager();
-        private FilterInfoCollection videoDevices;
-        private VideoCaptureDevice videoSource;
         public bool isThanhCong = false;
+        private VideoCapture capture;
+        private CancellationTokenSource cts;
+        private Task cameraTask;
+        private readonly object lockObject = new object();
 
-        public XuLyMatThe(string maveluot)
+        public XuLyMatThe(string maveluot = "0")
         {
             InitializeComponent();
             this.maveluot = maveluot;
@@ -34,7 +33,7 @@ namespace QuanLyBaiGiuXe
         private void btnChoRaKoTinhPhi_Click(object sender, EventArgs e)
         {
             bool raAnh = XuLyPathAnh("ra_", out string path);
-            pbRa.Image = Image.FromFile(path);
+            pbRa.Image = System.Drawing.Image.FromFile(path);
             if (cbKhoaThe.Checked == true)
             {
                 bool isKhoaThe = manager.SetTrangThaiSuDungThe(tbMaThe.Text, -1);
@@ -42,12 +41,13 @@ namespace QuanLyBaiGiuXe
                 {
                     ToastService.Show("Không thể khóa thẻ!", this);
                     return;
-                } else
+                }
+                else
                 {
                     ToastService.Show("Khóa thẻ thành công!", this);
                 }
             }
-            bool result = manager.CapNhatMatTheVeLuot(maveluot,path, 0, cbKhoaThe.Checked);
+            bool result = manager.CapNhatMatTheVeLuot(maveluot, path, 0, cbKhoaThe.Checked);
             if (result)
             {
                 ToastService.Show("Cập nhật vé thành công!, 0 đ", this);
@@ -64,7 +64,7 @@ namespace QuanLyBaiGiuXe
         private void btnChoRaTinhPhi_Click(object sender, EventArgs e)
         {
             bool raAnh = XuLyPathAnh("ra_", out string path);
-            pbRa.Image = Image.FromFile(path);
+            pbRa.Image = System.Drawing.Image.FromFile(path);
             if (cbKhoaThe.Checked == true)
             {
                 bool isKhoaThe = manager.SetTrangThaiSuDungThe(tbMaThe.Text, -1);
@@ -80,7 +80,7 @@ namespace QuanLyBaiGiuXe
             }
 
             int tien = Convert.ToInt32(tbGiaVe.Text) + AppConfig.TienPhatMatThe;
-            bool result = manager.CapNhatMatTheVeLuot(maveluot, path, tien , cbKhoaThe.Checked);
+            bool result = manager.CapNhatMatTheVeLuot(maveluot, path, tien, cbKhoaThe.Checked);
             if (result)
             {
                 ToastService.Show($"Cập nhật vé thành công!, {tien.ToString("N0")} đ", this);
@@ -112,7 +112,7 @@ namespace QuanLyBaiGiuXe
             try
             {
                 db.OpenConnection();
-                using (SqlCommand cmd = new SqlCommand(@"sp_xulymatthe", db.GetConnection()))
+                using (var cmd = new SqlCommand(@"sp_xulymatthe", db.GetConnection()))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
@@ -173,7 +173,6 @@ namespace QuanLyBaiGiuXe
         {
 
         }
-
         private void LoadImageToPictureBox(PictureBox picBox, string imagePath)
         {
             try
@@ -185,7 +184,7 @@ namespace QuanLyBaiGiuXe
 
                     using (var ms = new MemoryStream(File.ReadAllBytes(imagePath)))
                     {
-                        picBox.Image = Image.FromStream(ms);
+                        picBox.Image = System.Drawing.Image.FromStream(ms);
                     }
                 }
                 else
@@ -199,7 +198,6 @@ namespace QuanLyBaiGiuXe
                 picBox.Image = null;
             }
         }
-
         private bool XuLyPathAnh(string prefix, out string imagePath)
         {
             imagePath = string.Empty;
@@ -230,58 +228,186 @@ namespace QuanLyBaiGiuXe
 
         private void XuLyMatThe_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (videoSource != null && videoSource.IsRunning)
+            try
             {
-                videoSource.SignalToStop();
-                videoSource.WaitForStop();
+                StopCamera();
+
+                // Đợi camera task hoàn thành (tối đa 2 giây)
+                if (cameraTask != null && !cameraTask.IsCompleted)
+                {
+                    if (!cameraTask.Wait(2000))
+                    {
+                        // Force cancel nếu không dừng được
+                        cts?.Cancel();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Form closing error: {ex.Message}");
             }
         }
 
-        private void VideoSource_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        private void LoadCamera()
         {
             try
             {
-                Bitmap bitmap = (Bitmap)eventArgs.Frame.Clone();
+                // Stop existing camera first
+                StopCamera();
 
-                if (pbRa.InvokeRequired)
+                capture = new VideoCapture(0);
+                if (!capture.IsOpened())
                 {
-                    pbRa.BeginInvoke(new Action(() =>
+                    MessageBox.Show("Không tìm thấy camera!");
+                    return;
+                }
+
+                cts = new CancellationTokenSource();
+
+                cameraTask = Task.Run(async () =>
+                {
+                    var mat = new Mat();
+                    try
                     {
-                        pbRa.Image?.Dispose();
-                        pbRa.Image = bitmap;
-                        pbRa.SizeMode = PictureBoxSizeMode.Zoom;
-                    }));
-                }
-                else
-                {
-                    pbRa.Image?.Dispose();
-                    pbRa.Image = bitmap;
-                    pbRa.SizeMode = PictureBoxSizeMode.Zoom;
-                }
-            }
-            catch { }
-        }
-        private void LoadCamera()
-        {
-            videoDevices = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+                        while (!cts.Token.IsCancellationRequested)
+                        {
+                            lock (lockObject)
+                            {
+                                if (capture == null || !capture.IsOpened())
+                                    break;
 
-            if (videoDevices.Count == 0)
-            {
-                MessageBox.Show("Không tìm thấy camera!");
-                return;
+                                if (!capture.Read(mat) || mat.Empty())
+                                    continue;
+                            }
+
+                            // Kiểm tra form còn tồn tại không
+                            if (IsDisposed || Disposing)
+                                break;
+
+                            using var bmp = BitmapConverter.ToBitmap(mat);
+                            var toShow = (Bitmap)bmp.Clone();
+
+                            // Kiểm tra PictureBox còn tồn tại
+                            if (pbRa.IsDisposed || pbRa.Disposing)
+                            {
+                                toShow?.Dispose();
+                                break;
+                            }
+
+                            if (pbRa.InvokeRequired)
+                            {
+                                try
+                                {
+                                    pbRa.Invoke(new Action(() =>
+                                    {
+                                        if (!pbRa.IsDisposed && !IsDisposed)
+                                        {
+                                            pbRa.Image?.Dispose();
+                                            pbRa.Image = toShow;
+                                            pbRa.SizeMode = PictureBoxSizeMode.Zoom;
+                                        }
+                                        else
+                                        {
+                                            toShow?.Dispose();
+                                        }
+                                    }));
+                                }
+                                catch (ObjectDisposedException)
+                                {
+                                    toShow?.Dispose();
+                                    break;
+                                }
+                                catch (InvalidOperationException)
+                                {
+                                    // Control handle không còn tồn tại
+                                    toShow?.Dispose();
+                                    break;
+                                }
+                            }
+                            else
+                            {
+                                if (!pbRa.IsDisposed && !IsDisposed)
+                                {
+                                    pbRa.Image?.Dispose();
+                                    pbRa.Image = toShow;
+                                    pbRa.SizeMode = PictureBoxSizeMode.Zoom;
+                                }
+                                else
+                                {
+                                    toShow?.Dispose();
+                                    break;
+                                }
+                            }
+
+                            // Sử dụng delay có thể cancel được
+                            await Task.Delay(33, cts.Token);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Expected khi cancel
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"Camera task error: {ex.Message}");
+                    }
+                    finally
+                    {
+                        mat?.Dispose();
+                    }
+                }, cts.Token);
             }
-            videoSource = new VideoCaptureDevice(videoDevices[0].MonikerString);
-            videoSource.NewFrame += VideoSource_NewFrame;
-            videoSource.Start();
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Lỗi khởi tạo camera: {ex.Message}");
+            }
         }
+
         private void StopCamera()
         {
-            if (videoSource != null && videoSource.IsRunning)
+            try
             {
-                videoSource.SignalToStop(); // Gửi tín hiệu dừng
-                videoSource.WaitForStop();  // Chờ đến khi camera thật sự dừng
-                videoSource = null;
+                // Cancel task trước
+                cts?.Cancel();
+
+                // Đợi task dừng (tối đa 1 giây)
+                if (cameraTask != null && !cameraTask.IsCompleted)
+                {
+                    cameraTask.Wait(1000);
+                }
+
+                lock (lockObject)
+                {
+                    // Clean up capture
+                    capture?.Release();
+                    capture?.Dispose();
+                    capture = null;
+                }
+
+                // Clean up CancellationTokenSource
+                cts?.Dispose();
+                cts = null;
+                cameraTask = null;
+
+                // Clean up PictureBox image
+                if (pbRa != null && !pbRa.IsDisposed)
+                {
+                    pbRa.Image?.Dispose();
+                    pbRa.Image = null;
+                }
             }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Stop camera error: {ex.Message}");
+            }
+        }
+
+        // Thêm method này để cleanup khi form load
+        protected override void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            // Đảm bảo cleanup khi form đóng
+            this.FormClosed += (s, args) => StopCamera();
         }
     }
 }
