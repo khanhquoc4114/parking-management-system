@@ -1,6 +1,6 @@
 ﻿-- Tạo CSDL
---CREATE DATABASE testdoxe2 COLLATE Vietnamese_CI_AI;
---USE testdoxe2;
+--CREATE DATABASE BAIGIUXE COLLATE Vietnamese_CI_AI;
+--USE BAIGIUXE;
 --set dateformat ymd;
 --GO
 
@@ -1392,8 +1392,7 @@ CREATE TABLE CauHinhHeThong (
 );
 GO
 
--- Thêm data cần thiết để chạy chương trình
-
+-- Thêm init data để chạy chương trình
 INSERT INTO CauHinhHeThong (TenCongTy, DiaChi, Email, SoDienThoai, TienPhatMatThe, SoLuongXeToiDa, HanMucVeThang, HinhThucThuPhi, XuLyVeThangHetHan) 
 VALUES (N'Wuoc Company', N'UIT VNUHCM', N'22521212@gm.uit.edu.vn', N'02838220000', 50000, 200, 3, 1, 0);
 
@@ -1420,12 +1419,12 @@ INSERT INTO TinhTienCongVan (ThuTienTruoc, DemTu, DemDen, GioGiaoNgayDem, GiaThu
 VALUES (0, 22, 5, 18, 3000, 5000, 7000, 2000, 6, 8, 1);
 
 
--- lấy toàn bộ database
-DECLARE @sql NVARCHAR(MAX) = '';
-SELECT @sql = @sql + 'SELECT * FROM ' + TABLE_NAME + '; ' 
-FROM INFORMATION_SCHEMA.TABLES 
-WHERE TABLE_TYPE = 'BASE TABLE';
-EXEC sp_executesql @sql;
+---- lấy toàn bộ database
+--DECLARE @sql NVARCHAR(MAX) = '';
+--SELECT @sql = @sql + 'SELECT * FROM ' + TABLE_NAME + '; ' 
+--FROM INFORMATION_SCHEMA.TABLES 
+--WHERE TABLE_TYPE = 'BASE TABLE';
+--EXEC sp_executesql @sql;
 
 ---- Xoá toàn bộ view (cẩn thận)
 --DECLARE @dropviewsql NVARCHAR(MAX) = N'';
@@ -1440,3 +1439,34 @@ EXEC sp_executesql @sql;
 --FROM INFORMATION_SCHEMA.TABLES
 --WHERE TABLE_TYPE = 'BASE TABLE';
 --EXEC sp_executesql @dropSQL;
+
+--SELECT 
+--    name AS [DatabaseName],
+--    physical_name AS [FilePath],
+--    type_desc AS [FileType]
+--FROM sys.master_files
+--WHERE database_id = DB_ID('BAIGIUXE');
+
+----  Toàn bộ khoá ngoại
+--SELECT 
+--    fk.name AS ForeignKeyName, 
+--    tp.name AS ParentTable, 
+--    cp.name AS ParentColumn, 
+--    tr.name AS ReferencedTable, 
+--    cr.name AS ReferencedColumn
+--FROM sys.foreign_keys AS fk
+--INNER JOIN sys.foreign_key_columns AS fkc ON fk.object_id = fkc.constraint_object_id
+--INNER JOIN sys.tables AS tp ON fkc.parent_object_id = tp.object_id
+--INNER JOIN sys.columns AS cp ON fkc.parent_object_id = cp.object_id AND fkc.parent_column_id = cp.column_id
+--INNER JOIN sys.tables AS tr ON fkc.referenced_object_id = tr.object_id
+--INNER JOIN sys.columns AS cr ON fkc.referenced_object_id = cr.object_id AND fkc.referenced_column_id = cr.column_id;
+
+---- Toàn bộ trigger
+--SELECT 
+--    name AS TriggerName,
+--    OBJECT_NAME(parent_id) AS TableName,
+--    type_desc AS TriggerType,
+--    create_date,
+--    modify_date,
+--    OBJECT_DEFINITION(object_id) AS TriggerDefinition
+--FROM sys.triggers;
